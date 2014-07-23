@@ -1,0 +1,349 @@
+'Author: Mahesh Sreedharan
+'Date  : 3/12/2013
+'Desc  : Reads MS db for data updates
+
+Imports System.Data.SqlClient
+Public Class AdminQuizModify
+    Public DS_Lesson As New DataSet
+    Public DS_Quiz As New DataSet
+    Public Question_no As New Integer
+    Public No_of_Quest As New Integer
+    Public answer(5) As String
+    Public checkedAns As String
+    Public user_answercode(5, 1) As Integer
+    Public qid(5) As Integer
+    Dim ansInd(5) As Integer
+    Public curr_quest_id As New Integer
+
+    Private Sub AdminQuizModify_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        Me.MdiParent = MainForm
+        Me.ControlBox = False
+        Me.Size = MdiParent.Size
+        Me.DoubleBuffered = True
+        Label2.Text = Login.User_name & "    |"
+
+        Question_no = 0
+
+
+        Try
+            If conn.State = ConnectionState.Closed Then
+                conn.Open()
+            End If
+
+
+            Dim Question_no As New Integer
+            Dim result As New Integer
+
+            Dim cmd = New SqlCommand("get_Lesson", conn)
+            cmd.CommandType = CommandType.StoredProcedure
+
+            Dim adapter As New SqlDataAdapter(cmd)
+
+            adapter.Fill(DS_Lesson, "Lesson")
+            With ComboBox1
+                .DataSource = DS_Lesson.Tables(0)
+                .DisplayMember = "LessonName"
+                .ValueMember = "LessonName"
+                .SelectedIndex = 0
+            End With
+
+            Dim Lesson = New String("Test and Calibrate equipment")
+            Lesson = DS_Lesson.Tables(0).Rows(0).Item(0)
+
+            Dim cmd1 = New SqlCommand("get_quiz_details", conn)
+            cmd1.CommandType = CommandType.StoredProcedure
+            cmd1.Parameters.Add("@LessonName", SqlDbType.VarChar, 50, ParameterDirection.Input).Value = Lesson
+            Dim adapter1 As New SqlDataAdapter(cmd1)
+
+            adapter1.Fill(DS_Quiz, "Quiz")
+            If DS_Quiz.Tables(0).Rows.Count = 0 Then
+                TextBox1.Text = ""
+                TextBox2.Text = ""
+                TextBox3.Text = ""
+                TextBox4.Text = ""
+                TextBox5.Text = ""
+
+                TextBox6.Text = ""
+                Button4.Enabled = False
+                Button5.Enabled = False
+            Else
+                TextBox1.Text = DS_Quiz.Tables(0).Rows(0).Item(0)
+                TextBox2.Text = DS_Quiz.Tables(0).Rows(0).Item(3)
+                TextBox3.Text = DS_Quiz.Tables(0).Rows(0).Item(4)
+                TextBox4.Text = DS_Quiz.Tables(0).Rows(0).Item(5)
+                TextBox5.Text = DS_Quiz.Tables(0).Rows(0).Item(6)
+
+                TextBox6.Text = DS_Quiz.Tables(0).Rows(0).Item(1)
+            End If
+            
+
+        Catch ex As Exception
+            MsgBox(ex.Message)
+
+            'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+        Finally
+            conn.Close()
+
+        End Try
+
+    End Sub
+
+
+    Private Sub Button3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button3.Click
+
+        DS_Quiz.Tables("Quiz").Clear()
+
+        Try
+            If conn.State = ConnectionState.Closed Then
+                conn.Open()
+            End If
+
+            Dim Lesson As String
+            Dim Question_no As New Integer
+            Dim result As New Integer
+
+            Lesson = ComboBox1.Text
+
+            Dim cmd = New SqlCommand("get_quiz_details", conn)
+            cmd.CommandType = CommandType.StoredProcedure
+            cmd.Parameters.Add("@LessonName", SqlDbType.VarChar, 50, ParameterDirection.Input).Value = Lesson
+            Dim adapter As New SqlDataAdapter(cmd)
+
+            adapter.Fill(DS_Quiz, "Quiz")
+
+            If DS_Quiz.Tables(0).Rows.Count = 0 Then
+                TextBox1.Text = ""
+                TextBox2.Text = ""
+                TextBox3.Text = ""
+                TextBox4.Text = ""
+                TextBox5.Text = ""
+
+                TextBox6.Text = ""
+                Button4.Enabled = False
+                Button5.Enabled = False
+            Else
+                TextBox1.Text = DS_Quiz.Tables(0).Rows(0).Item(0)
+                TextBox2.Text = DS_Quiz.Tables(0).Rows(0).Item(3)
+                TextBox3.Text = DS_Quiz.Tables(0).Rows(0).Item(4)
+                TextBox4.Text = DS_Quiz.Tables(0).Rows(0).Item(5)
+                TextBox5.Text = DS_Quiz.Tables(0).Rows(0).Item(6)
+
+                TextBox6.Text = DS_Quiz.Tables(0).Rows(0).Item(1)
+                Button4.Enabled = True
+                Button5.Enabled = True
+            End If
+
+        Catch ex As Exception
+            MsgBox(ex.Message)
+
+            'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+        Finally
+            conn.Close()
+
+        End Try
+    End Sub
+
+    Private Sub submitbtn_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles submitbtn.Click
+        Try
+            If conn.State = ConnectionState.Closed Then
+                conn.Open()
+            End If
+
+            
+            Dim result As New Integer
+
+            curr_quest_id = DS_Quiz.Tables(0).Rows(Question_no).Item(2)
+
+
+            Dim cmd = New SqlCommand("UPDATE_QUIZ_DETAILS", conn)
+            cmd.CommandType = CommandType.StoredProcedure
+            cmd.Parameters.Add("@Question", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox1.Text
+            cmd.Parameters.Add("@question_id", SqlDbType.Int, 10, ParameterDirection.Input).Value = curr_quest_id
+            cmd.Parameters.Add("@Answer", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox6.Text
+            cmd.Parameters.Add("@option1", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox2.Text
+            cmd.Parameters.Add("@option2", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox3.Text
+            cmd.Parameters.Add("@option3", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox4.Text
+            cmd.Parameters.Add("@option4", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox5.Text
+            cmd.Parameters.Add("@param", SqlDbType.Int, 10, ParameterDirection.Input).Value = 1
+
+            cmd.Parameters.Add("@ret", SqlDbType.Int)
+            cmd.Parameters("@ret").Direction = ParameterDirection.Output
+            cmd.ExecuteNonQuery()
+
+            result = cmd.Parameters("@ret").Value
+
+            If result < 0 Then
+                MsgBox("Updated Failed")
+            Else
+                MsgBox("Update Successful")
+            End If
+
+
+        Catch ex As Exception
+            MsgBox(ex.Message)
+
+            'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+        Finally
+            conn.Close()
+
+        End Try
+    End Sub
+
+    Private Sub Button4_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button4.Click
+        Question_no = Question_no + 1
+        Button5.Enabled = True
+        curr_quest_id = DS_Quiz.Tables(0).Rows(Question_no).Item(2)
+
+        TextBox1.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(0)
+        TextBox2.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(3)
+        TextBox3.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(4)
+        TextBox4.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(5)
+        TextBox5.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(6)
+
+        TextBox6.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(1)
+
+        If Question_no = DS_Quiz.Tables(0).Rows.Count - 1 Then
+            Button4.Enabled = False
+        End If
+
+    End Sub
+
+    Private Sub Button5_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button5.Click
+        Question_no = Question_no - 1
+        curr_quest_id = DS_Quiz.Tables(0).Rows(Question_no).Item(2)
+        Button4.Enabled = True
+
+        TextBox1.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(0)
+        TextBox2.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(3)
+        TextBox3.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(4)
+        TextBox4.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(5)
+        TextBox5.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(6)
+
+        TextBox6.Text = DS_Quiz.Tables(0).Rows(Question_no).Item(1)
+
+        If Question_no = 0 Then
+            Button5.Enabled = False
+        End If
+    End Sub
+
+    Private Sub Button1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button1.Click
+        Try
+            If conn.State = ConnectionState.Closed Then
+                conn.Open()
+            End If
+
+
+
+            Dim result As New Integer
+
+
+            curr_quest_id = DS_Quiz.Tables(0).Rows(Question_no).Item(2)
+
+
+            Dim cmd = New SqlCommand("UPDATE_QUIZ_DETAILS", conn)
+            cmd.CommandType = CommandType.StoredProcedure
+            cmd.Parameters.Add("@Question", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox1.Text
+            cmd.Parameters.Add("@question_id", SqlDbType.Int, 10, ParameterDirection.Input).Value = curr_quest_id
+            cmd.Parameters.Add("@Answer", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox6.Text
+            cmd.Parameters.Add("@option1", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox2.Text
+            cmd.Parameters.Add("@option2", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox3.Text
+            cmd.Parameters.Add("@option3", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox4.Text
+            cmd.Parameters.Add("@option4", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox5.Text
+            cmd.Parameters.Add("@param", SqlDbType.Int, 10, ParameterDirection.Input).Value = 2
+
+            cmd.Parameters.Add("@ret", SqlDbType.Int)
+            cmd.Parameters("@ret").Direction = ParameterDirection.Output
+            cmd.ExecuteNonQuery()
+
+            result = cmd.Parameters("@ret").Value
+
+            If result < 0 Then
+                MsgBox("Insert Failed")
+            Else
+                MsgBox("Insert Successful")
+            End If
+
+
+        Catch ex As Exception
+            MsgBox(ex.Message)
+
+            'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+        Finally
+            conn.Close()
+
+        End Try
+    End Sub
+
+    Private Sub Button2_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Button2.Click
+        Try
+            If conn.State = ConnectionState.Closed Then
+                conn.Open()
+            End If
+
+            Dim result As New Integer
+
+
+            curr_quest_id = DS_Quiz.Tables(0).Rows(Question_no).Item(2)
+
+            'MsgBox(DS_Quiz.Tables(0).Rows(Question_no).Item(2))
+            Dim cmd = New SqlCommand("UPDATE_QUIZ_DETAILS", conn)
+            cmd.CommandType = CommandType.StoredProcedure
+            cmd.Parameters.Add("@Question", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox1.Text
+            cmd.Parameters.Add("@question_id", SqlDbType.Int, 10, ParameterDirection.Input).Value = curr_quest_id
+            cmd.Parameters.Add("@Answer", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox6.Text
+            cmd.Parameters.Add("@option1", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox2.Text
+            cmd.Parameters.Add("@option2", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox3.Text
+            cmd.Parameters.Add("@option3", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox4.Text
+            cmd.Parameters.Add("@option4", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = TextBox5.Text
+            cmd.Parameters.Add("@param", SqlDbType.Int, 10, ParameterDirection.Input).Value = 3
+
+            cmd.Parameters.Add("@ret", SqlDbType.Int)
+            cmd.Parameters("@ret").Direction = ParameterDirection.Output
+            cmd.ExecuteNonQuery()
+
+            result = cmd.Parameters("@ret").Value
+
+            If result < 0 Then
+                MsgBox("Delete Failed")
+            Else
+                MsgBox("Delete Successful")
+
+            End If
+
+
+        Catch ex As Exception
+            MsgBox(ex.Message)
+
+            'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+        Finally
+            conn.Close()
+
+        End Try
+    End Sub
+
+    Private Sub backbutton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles backbutton.Click
+        Dim frmHomescreen As New HomeScreen
+        frmHomescreen.MdiParent = MainForm
+        frmHomescreen.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label1.Click
+        Dim frmHomescreen As New HomeScreen
+        frmHomescreen.MdiParent = MainForm
+        frmHomescreen.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label5_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label5.Click
+        Dim lgnfrm As New Login
+        lgnfrm.MdiParent = MainForm
+        lgnfrm.Show()
+        Me.Close()
+    End Sub
+End Class
