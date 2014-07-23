@@ -1,0 +1,469 @@
+' Author: Mahesh Sreedharan
+' Date  : 3/15/2013
+' Desc  : Creates dragNdrop UI and commits changes to MS SQL DB
+
+Imports TextCursors
+Imports System.Data.SqlClient
+
+Public Class FuelRodPreInsQuiz
+    Public DS As New DataSet
+    Private _Dragging As Boolean        ' Indicates that Dragging has begun
+    Private _DragSource As Integer = 0
+    Private myCursor As xCursor = New TextCursors.xCursor
+    Private Sub FuelRodPreInsQuiz_Load(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles MyBase.Load
+        Me.MdiParent = MainForm
+        Me.ControlBox = False
+        Me.Size = MdiParent.Size
+        Me.DoubleBuffered = True
+        Label2.Text = Login.User_name & "    |"
+        footer.Enabled = False
+        Try
+
+            Dim Lesson = New String("DragnDrop")
+            Dim Question_no As New Integer
+
+            Dim cmd = New SqlCommand("get_question", conn)
+            cmd.CommandType = CommandType.StoredProcedure
+            cmd.Parameters.Add("@LessonName", SqlDbType.VarChar, 50, ParameterDirection.Input).Value = Lesson
+
+            Question_no = 4
+            cmd.Parameters.Add("@QuestionNo", SqlDbType.VarChar, 10, ParameterDirection.Input).Value = Question_no
+
+            Dim adapter As New SqlDataAdapter(cmd)
+
+
+            adapter.Fill(DS, "Questions")
+
+            Label20.Text = DS.Tables(0).Rows(0).Item(0)
+            Label21.Text = DS.Tables("Questions").Rows(1).Item(0)
+            Label22.Text = DS.Tables("Questions").Rows(2).Item(0)
+            Label7.Text = DS.Tables("Questions").Rows(3).Item(0)
+
+        Catch ex As Exception
+            MsgBox(ex.Message)
+
+            'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+        Finally
+            conn.Close()
+
+        End Try
+    End Sub
+    Private Sub Label20_MouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles Label20.MouseDown
+        ' Me.Cursor = Cursors.Cross
+        ' Label20.DoDragDrop(Label20.Text, DragDropEffects.Copy)
+
+        _Dragging = True
+
+        myCursor.Shrinkage = 3
+        myCursor.Fade = True
+        myCursor.Font = Label20.Font
+        myCursor.TextTransparency = 100
+        myCursor.CursorText = Label20.Text
+
+    End Sub
+    Private Sub Label20_MouseMove(ByVal sender As System.Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles Label20.MouseMove
+        If _Dragging Then
+            _DragSource = 1
+            Label20.DoDragDrop(Label20.Text, DragDropEffects.Copy)
+        End If
+        _Dragging = False
+    End Sub
+    Private Sub Label20_GiveFeedback(ByVal sender As System.Object, ByVal e As System.Windows.Forms.GiveFeedbackEventArgs) Handles Label20.GiveFeedback
+        'Dim cursor As String
+        'cursor = "C:\Users\MSREEDH\documents\visual studio 2010\Projects\WestingHouse\WestingHouse\images\alternate select.cur"
+        'e.UseDefaultCursors = False
+        'Me.Cursor = New Cursor(cursor)
+
+        'Cursor.Current = New System.Windows.Forms.Cursor("C:\Users\MSREEDH\documents\visual studio 2010\Projects\WestingHouse\WestingHouse\images\move1.cur")
+
+        e.UseDefaultCursors = False
+        If ((e.Effect And DragDropEffects.Copy) = DragDropEffects.Copy) Then
+            myCursor.GoodDrop = TextCursors.xCursor.DropValid.GoodDrop
+            Cursor.Current = myCursor.GetCursor
+        Else
+            myCursor.GoodDrop = TextCursors.xCursor.DropValid.BadDrop
+            Cursor.Current = myCursor.GetCursor
+        End If
+
+    End Sub
+    Private Sub Label20_DragOver(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label20.DragOver
+        If e.Data.GetDataPresent(DataFormats.StringFormat) Then
+            e.Effect = DragDropEffects.None
+        End If
+
+    End Sub
+
+
+    Private Sub Label21_MouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles Label21.MouseDown
+        Label21.DoDragDrop(Label21.Text, DragDropEffects.Copy)
+
+    End Sub
+    Private Sub Label22_MouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles Label22.MouseDown
+        Label22.DoDragDrop(Label22.Text, DragDropEffects.Copy)
+
+    End Sub
+    Private Sub Label13_DragEnter(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label13.DragEnter
+
+        Me.Cursor = Cursors.Default
+        If (e.Data.GetDataPresent(DataFormats.Text)) Then
+            e.Effect = DragDropEffects.Copy
+        Else
+            e.Effect = DragDropEffects.None
+        End If
+
+    End Sub
+
+    Private Sub Label13_DragDrop(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label13.DragDrop
+        'Me.Cursor = Cursors.Default
+        Dim s As New String(Label13.Text)
+        Label13.Text = e.Data.GetData(DataFormats.Text).ToString
+
+        If (Label13.Text = Label14.Text Or Label13.Text = Label15.Text) And String.IsNullOrEmpty(s) Then
+            Label13.Text = ""
+
+
+        ElseIf (Label13.Text = Label14.Text Or Label13.Text = Label15.Text) And (Not String.IsNullOrEmpty(s)) Then
+            Label13.Text = s
+        Else
+            Label13.Text = e.Data.GetData(DataFormats.Text).ToString
+        End If
+
+    End Sub
+
+
+    Private Sub Label14_DragEnter(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label14.DragEnter
+        If (e.Data.GetDataPresent(DataFormats.Text)) Then
+            e.Effect = DragDropEffects.Copy
+        Else
+            e.Effect = DragDropEffects.None
+        End If
+
+    End Sub
+
+    Private Sub Label14_DragDrop(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label14.DragDrop
+        Dim s As New String(Label14.Text)
+        Label14.Text = e.Data.GetData(DataFormats.Text).ToString
+
+        If (Label14.Text = Label13.Text Or Label14.Text = Label15.Text) And String.IsNullOrEmpty(s) Then
+            Label14.Text = ""
+        ElseIf (Label14.Text = Label13.Text Or Label14.Text = Label15.Text) And (Not String.IsNullOrEmpty(s)) Then
+            Label14.Text = s
+        End If
+
+    End Sub
+
+    Private Sub Label15_DragEnter(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label15.DragEnter
+        If (e.Data.GetDataPresent(DataFormats.Text)) Then
+            e.Effect = DragDropEffects.Copy
+        Else
+            e.Effect = DragDropEffects.None
+        End If
+
+    End Sub
+
+    Private Sub Label15_DragDrop(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label15.DragDrop
+        Dim s As New String(Label15.Text)
+        Label15.Text = e.Data.GetData(DataFormats.Text).ToString
+
+        If (Label15.Text = Label13.Text Or Label15.Text = Label14.Text) And String.IsNullOrEmpty(s) Then
+            Label15.Text = ""
+        ElseIf (Label15.Text = Label13.Text Or Label15.Text = Label14.Text) And (Not String.IsNullOrEmpty(s)) Then
+            Label15.Text = s
+        End If
+
+    End Sub
+    Private Sub Label6_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label6.Click
+        Dim lgnfrm As New Login
+        lgnfrm.MdiParent = MainForm
+        lgnfrm.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label3.Click
+        Dim frmHomescreen As New HomeScreen
+        frmHomescreen.MdiParent = MainForm
+        frmHomescreen.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Resetbtn_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Resetbtn.Click
+        submitbtn.Enabled = True
+        Label13.Text = ""
+        Label14.Text = ""
+        Label15.Text = ""
+        Label8.Text = ""
+        PictureBox12.Visible = False
+        PictureBox13.Visible = False
+        PictureBox14.Visible = False
+        PictureBox15.Visible = False
+    End Sub
+
+    Private Sub submitbtn_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles submitbtn.Click
+        If (Label13.Text = String.Empty) Or (Label14.Text = String.Empty) Or (Label15.Text = String.Empty) Or (Label8.Text = String.Empty) Then
+
+            MsgBox("Please enter all fields.")
+        Else
+
+            Try
+                conn.Open()
+
+                Dim qid(3) As Integer
+                qid(0) = 0
+                qid(1) = 0
+                qid(2) = 0
+                qid(3) = 0
+                'qid(0) = DS.Tables("Questions").Rows(0).Item(1)
+                'qid(1) = DS.Tables("Questions").Rows(1).Item(1)
+                'qid(2) = Label15.Text 'DS.Tables("Questions").Rows(2).Item(1)
+                'qid(3) = Label8.Text 'DS.Tables("Questions").Rows(3).Item(1)
+
+                Dim qans(3) As String
+                qans(0) = "a"
+                qans(1) = "a"
+                qans(2) = "a"
+                qans(3) = "a"
+
+                If String.IsNullOrEmpty(Label13.Text) Then
+                    qans(0) = " "
+                Else
+                    qans(0) = Label13.Text
+                End If
+
+                If String.IsNullOrEmpty(Label14.Text) Then
+                    qans(1) = " "
+                Else
+                    qans(1) = Label14.Text
+                End If
+
+                If String.IsNullOrEmpty(Label15.Text) Then
+                    qans(2) = " "
+                Else
+                    qans(2) = Label15.Text
+                End If
+
+                If String.IsNullOrEmpty(Label8.Text) Then
+                    qans(3) = " "
+                Else
+                    qans(3) = Label8.Text
+                End If
+
+
+
+                Dim cmd1 = New SqlCommand("get_qid", conn)
+                cmd1.CommandType = CommandType.StoredProcedure
+                cmd1.Parameters.Add("@ret", SqlDbType.Int)
+                cmd1.Parameters("@ret").Direction = ParameterDirection.Output
+
+                Dim val As Integer
+                For j = 0 To 3 And val = 0
+                    cmd1.Parameters.Add("@Question", SqlDbType.VarChar, 100, ParameterDirection.Input).Value = qans(j)
+                    cmd1.ExecuteNonQuery()
+                    val = cmd1.Parameters("@ret").Value
+                    cmd1.Parameters.RemoveAt("@Question")
+                    qid(j) = val
+                Next
+                Dim answer(4) As String
+                answer(0) = "a"
+                answer(1) = "a"
+                answer(2) = "a"
+                answer(3) = "a"
+
+                If Not String.IsNullOrEmpty(Label13.Text) Then
+                    answer(0) = Label23.Text
+
+                End If
+
+                If Not String.IsNullOrEmpty(Label14.Text) Then
+                    answer(1) = Label24.Text
+                End If
+
+                If Not String.IsNullOrEmpty(Label15.Text) Then
+                    answer(2) = Label25.Text
+                End If
+
+                If Not String.IsNullOrEmpty(Label8.Text) Then
+                    answer(3) = Label26.Text
+                End If
+                Dim ansInd(5) As Integer
+                Dim i As Integer
+                Dim result As Integer
+                Dim cmd = New SqlCommand("insert_points", conn)
+                cmd.CommandType = CommandType.StoredProcedure
+                cmd.Parameters.Add("@Username", SqlDbType.VarChar, 100, ParameterDirection.Input).Value = Login.User_name
+                cmd.Parameters.Add("@ansInd", SqlDbType.Int)
+                cmd.Parameters("@ansInd").Direction = ParameterDirection.Output
+                cmd.Parameters.Add("@ret", SqlDbType.Int)
+                cmd.Parameters("@ret").Direction = ParameterDirection.Output
+                result = 0
+                For i = 0 To 3 And result = 0
+                    cmd.Parameters.Add("@Question_Id", SqlDbType.Int, 10, ParameterDirection.Input).Value = qid(i)
+                    cmd.Parameters.Add("@UserAnswer", SqlDbType.VarChar, 1000, ParameterDirection.Input).Value = answer(i)
+                    cmd.ExecuteNonQuery()
+                    ansInd(i) = cmd.Parameters("@ansInd").Value
+                    result = cmd.Parameters("@ret").Value
+                    cmd.Parameters.RemoveAt("@Question_Id")
+                    cmd.Parameters.RemoveAt("@UserAnswer")
+
+                Next
+
+                If result = 0 Then
+                    PictureBox12.Visible = True
+                    PictureBox13.Visible = True
+                    PictureBox14.Visible = True
+                    PictureBox15.Visible = True
+
+
+                    submitbtn.Enabled = False
+                    If ansInd(0) = 0 Then
+                        PictureBox12.Image = My.Resources.cross
+                    Else
+                        PictureBox12.Image = My.Resources.Tick
+                    End If
+
+                    If ansInd(1) = 0 Then
+                        PictureBox13.Image = My.Resources.cross
+                    Else
+                        PictureBox13.Image = My.Resources.Tick
+                    End If
+
+                    If ansInd(2) = 0 Then
+                        PictureBox14.Image = My.Resources.cross
+                    Else
+                        PictureBox14.Image = My.Resources.Tick
+                    End If
+
+                    If ansInd(3) = 0 Then
+                        PictureBox15.Image = My.Resources.cross
+                    Else
+                        PictureBox15.Image = My.Resources.Tick
+                    End If
+
+                End If
+
+
+
+            Catch ex As Exception
+                MsgBox(ex.Message)
+
+                'MsgBox("There seems to be a problem with database connectivity, please contact the administrator for resolution.")
+
+            Finally
+                conn.Close()
+
+            End Try
+        End If
+    End Sub
+
+    Private Sub backbutton_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles backbutton.Click
+        'Dim frmPreInsVid As New FuelRodInsPreInsVid
+        'frmPreInsVid.MdiParent = MainForm
+        'frmPreInsVid.Show()
+        'Me.Close()
+        Dim frmInscalibquiz As New FuelRodInsCalibQuiz2
+        frmInscalibquiz.MdiParent = MainForm
+        frmInscalibquiz.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub continuebtn_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles continuebtn.Click
+        'Dim frmInsAccIns As New FuelRodInsAccIns
+        'frmInsAccIns.MdiParent = MainForm
+        'frmInsAccIns.Show()
+        'Me.Close()
+
+        Dim frmInsAccess As New FuelRodInsAccess
+        frmInsAccess.MdiParent = MainForm
+        frmInsAccess.Show()
+        Me.Close()
+    End Sub
+    Private Sub PictureBox1_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBox1.Click
+        Dim frmfinddoc As New FuelRodInsFindDoc
+        frmfinddoc.MdiParent = MainForm
+        frmfinddoc.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub PictureBox3_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBox3.Click
+        Dim frmInsAccess As New FuelRodInsAccess
+        frmInsAccess.MdiParent = MainForm
+        frmInsAccess.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub PictureBox4_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBox4.Click
+        Dim frmInsSearch As New FuelRodInsSearch
+        frmInsSearch.MdiParent = MainForm
+        frmInsSearch.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub PictureBox5_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBox5.Click
+        Dim frmDecIni As New FuelRodInsDecIni
+        frmDecIni.MdiParent = MainForm
+        frmDecIni.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub PictureBox6_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBox6.Click
+        Dim frmInsResText As New FuelRodInsResText
+        frmInsResText.MdiParent = MainForm
+        frmInsResText.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub PictureBox8_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles PictureBox8.Click
+        Dim frmInsRetText As New FuelRodInsRetText
+        frmInsRetText.MdiParent = MainForm
+        frmInsRetText.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label10_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label10.Click
+        Dim frmfinddoc As New FuelRodInsFindDoc
+        frmfinddoc.MdiParent = MainForm
+        frmfinddoc.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label11_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label11.Click
+        Dim frmarrange As New FuelRodInsArrange
+        frmarrange.MdiParent = MainForm
+        frmarrange.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label12_Click(ByVal sender As System.Object, ByVal e As System.EventArgs) Handles Label12.Click
+        Dim frmcalibrate As New FuelRodInsCalib
+        frmcalibrate.MdiParent = MainForm
+        frmcalibrate.Show()
+        Me.Close()
+    End Sub
+
+    Private Sub Label7_MouseDown(ByVal sender As System.Object, ByVal e As System.Windows.Forms.MouseEventArgs) Handles Label7.MouseDown
+        Label7.DoDragDrop(Label7.Text, DragDropEffects.Copy)
+    End Sub
+
+    Private Sub Label8_DragEnter(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label8.DragEnter
+        If (e.Data.GetDataPresent(DataFormats.Text)) Then
+            e.Effect = DragDropEffects.Copy
+        Else
+            e.Effect = DragDropEffects.None
+        End If
+    End Sub
+
+    Private Sub Label8_DragDrop(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DragEventArgs) Handles Label8.DragDrop
+        Dim s As New String(Label8.Text)
+        Label8.Text = e.Data.GetData(DataFormats.Text).ToString
+
+        If (Label8.Text = Label13.Text Or Label8.Text = Label15.Text) And String.IsNullOrEmpty(s) Then
+            Label8.Text = ""
+        ElseIf (Label8.Text = Label13.Text Or Label8.Text = Label15.Text) And (Not String.IsNullOrEmpty(s)) Then
+            Label8.Text = s
+        End If
+    End Sub
+
+    Private Sub Panel2_Paint(ByVal sender As System.Object, ByVal e As System.Windows.Forms.PaintEventArgs) Handles Panel2.Paint
+
+    End Sub
+End Class
