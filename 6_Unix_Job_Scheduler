@@ -1,0 +1,67 @@
+######################################################################
+# Author : Mahesh Sreedhraan
+# Date   : 8/17/2009
+# Desc   : Job sync script for automatic job start per calendar setup.
+#	   Needs file sc.ba created by init.sh
+######################################################################
+
+for record in `cat sc.ba`
+do
+	
+	ID=`echo ${record} | cut -d "$" -f1`
+
+	SC=`echo ${record} | cut -d "$" -f2`
+
+
+		if [ ! ${SC} = " " ]
+		then
+			record1=$SC
+			record=`echo $SC | sed 's/and /&#/g' | sed 's/or /&#/g'`
+			echo $record | tr '#' '\n' > a.txt
+			len=`cat a.txt | wc -l`
+				
+				while [ $len -gt 0 ];
+				do
+
+					record=`cat a.txt | tail -${len} | head -1`
+		
+					st=`echo $record | sed 's/(*\(.*\)[(].*/\1/'`
+
+					seter=`echo $record | sed 's/(*\(.*[(].*[)]\).*/\1/' | sed 's/))*/)/g'`
+
+					job=`echo $record | sed 's/.*[(]\(.*\)[)].*/\1/' | sed 's/)//g'`
+
+					oper=`echo $record | sed 's/.*[(].*[)]\(.*\)/\1/'`
+
+					len=`expr $len - 1`
+
+					echo $st $job $oper $seter
+
+					#status=`grep $job job.ba | cut -d "$" -f2`
+					
+					./SCset $job $st SCAN
+
+					so=$?
+
+					record2=`echo $record1 | sed 's/'${seter}'/'${so}'/'`
+					record1=$record2
+
+				done
+
+			record2=`echo $record2 | sed 's/and/\&\&/g' | sed 's/or/||/g'`
+
+			echo record2 is $record2
+
+			record3=`echo "$record2" | bc`
+			echo record3 is $record3
+
+			if [ $record3 -eq 0 ]
+			then
+
+				./SCset $job $st SET
+
+			fi
+	
+	fi	
+
+done
