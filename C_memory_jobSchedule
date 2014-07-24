@@ -1,0 +1,71 @@
+/**********************************************************************
+* Author : Mahesh Sreedhraan
+* Date   : 8/17/2009
+* Desc   : Displays memory setup info for the job scheduler.
+************************************************************************/
+
+#include "mem_com.h"
+
+int main (int argc, char**argv) {
+
+    void *mem_segment = (void *)0;
+   
+    SUPERGRID *supergrid;
+
+    int shmid;
+    key_t START_KEY = _START_KEY;
+    int newKey;
+
+    shmid = shmget(START_KEY, sizeof(SUPERGRID), 0644 | IPC_CREAT);
+
+    if (shmid == -1) {
+        fprintf(stderr, "6shmget failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    mem_segment = shmat(shmid, NULL, 0);
+    
+    if (mem_segment == (void *)-1) {
+        fprintf(stderr, "shmat failed\n");
+        exit(EXIT_FAILURE);
+    }
+
+    supergrid = (SUPERGRID *)mem_segment;
+
+    if (supergrid->index2==0)
+
+    printf("mem4second, SC = %d,  ID=%s, cmnd=%s\n",supergrid->SC,supergrid->Status,supergrid->jobId);
+
+    else {
+
+       while (supergrid->index2!=0) {
+
+          newKey = supergrid->index2;
+
+          shmid = shmget(newKey, sizeof(SUPERGRID), 0644 | IPC_CREAT);
+
+          if (shmid == -1) {
+        
+             fprintf(stderr, "7shmget failed\n");
+             exit(EXIT_FAILURE);
+          }
+
+          mem_segment = shmat(shmid, NULL, 0);
+    
+          if (mem_segment == (void *)-1) {
+             fprintf(stderr, "shmat failed\n");
+             exit(EXIT_FAILURE);
+          }
+
+          supergrid = (SUPERGRID *)mem_segment;
+
+
+          printf("mem4second, SC = %d,  ID=%s\n",supergrid->SC,supergrid->Status,supergrid->jobId);
+
+       }
+
+    }
+
+return 1;
+
+}
