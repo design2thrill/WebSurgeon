@@ -1,0 +1,113 @@
+/**********************************************************
+** Author: Mahesh Sreedharan
+** Date  : 6/02/2004
+** Desc  : Connects parallel port for device interface for
+           automating pick n place robotic arm.
+           Hardware: Photosensor, resistive switch, relays,
+                     DC motors.
+           Supported OS: MS DOS (TURBO CPP).
+************************************************************/
+
+#include<stdio.h>
+#include<conio.h>
+#include<dos.h>
+
+void main() {
+  long int result;
+  long int code;
+  long int bay;
+  long int ans[5];
+  long int well=0x0;
+  int port1=0x378;
+  int i=0, j=0,k=0,n=0,m=0;
+  clrscr();
+  
+  printf("                      TEST RUN");
+  outportb(port1,0x0);
+  
+  for(i=0;i<=5;i++){
+    ans[i]=0x0;   }
+    i=0;
+
+    while(!kbhit()){
+     result=inportb(0x379);
+
+     if((result==0x17)||(result==0xd7)||(result==0xcf)||(result==0xf))
+     {
+       code=result;
+     }
+     if(code!=well){
+       ans[i]=code;
+       well=ans[i];
+       i++;
+       n=0;
+      for(j=0;j<=5;j++)
+      {
+       if(code==ans[j])
+       n++;
+      }
+      if(n==2){
+       m=1;
+      }
+
+      bay=code+m;
+
+      m=0;
+     
+     if(i>5&&n==2)
+     {
+      for(k=0;k<=5;k++)
+      {
+       ans[k]=0x0;
+      }
+       i=0;
+     }
+
+  switch(bay){
+
+  case 0x17:       outportb(port1,0x8);
+		   gotoxy(35,12);
+		   printf("do");
+		   break;
+
+
+  case 0xf:       outportb(port1,0x0);
+		  delay(1000);
+		  outportb(port1,0x4);
+		  gotoxy(35,12);
+		  printf("up");break;
+
+
+ case 0x18:      outportb(port1,0x2);
+		 gotoxy(35,12);
+		 printf("ac");break;
+
+
+  case 0xd7:       outportb(port1,0x8);
+		   gotoxy(35,12);
+		   printf("do");
+		   break;
+
+  case 0xcf:       outportb(port1,0x0);
+		   delay(1000);
+		   outportb(port1,0x4);
+		   gotoxy(35,12);
+		   printf("up");
+		   break;
+
+  case 0xd8:      outportb(port1,0x1);
+		  gotoxy(35,12);
+		  printf("cw");
+		  break;
+
+  default :       gotoxy(35,12);
+		  delay(500);
+		  printf("rugged %x %d",bay,m);
+   }
+  }
+ }
+
+  outportb(port1,0x0);
+  getch();
+
+ }
