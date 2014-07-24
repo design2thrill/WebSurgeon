@@ -32,9 +32,31 @@ int main (int argc, char**argv) {
 
     supergrid = (SUPERGRID *)mem_segment;
 
-    if (supergrid->index2==0)
+    if (supergrid->index2==0) {
 
-    printf("mem4second, SC = %d,  ID=%s, cmnd=%s\n",supergrid->SC,supergrid->Status,supergrid->jobId);
+    printf("mem4second, Sc = %d,  Status=%s, ID=%s\n",supergrid->SC,supergrid->Status,supergrid->jobId);
+
+    if (strcmp(argv[1],supergrid->jobId)==0) {
+
+		if (strcmp(argv[3],"SCAN")==0) {
+
+	          	if (strcmp(argv[2],supergrid->Status)==0) 	  
+          		
+
+             		return 1;
+         		
+          		else
+
+             		return 0 ;
+         	}
+
+		if (strcmp(argv[3],"SET")==0) 
+
+			supergrid->SC=1 ;
+
+         }
+
+    }
 
     else {
 
@@ -59,8 +81,27 @@ int main (int argc, char**argv) {
 
           supergrid = (SUPERGRID *)mem_segment;
 
+	  
+	  if (strcmp(argv[1],supergrid->jobId)==0) {
 
-          printf("mem4second, SC = %d,  ID=%s\n",supergrid->SC,supergrid->Status,supergrid->jobId);
+		if (strcmp(argv[3],"SCAN")==0) {
+
+	          	if (strcmp(argv[2],supergrid->Status)==0) 	  
+          		
+
+             		return 1;
+         		
+          		else
+
+             		return 0 ;
+         	}
+
+		if (strcmp(argv[3],"SET")==0) 
+
+			supergrid->SC=1 ;
+
+         }
+     printf("mem4second, Sc = %d,  Status=%s, ID=%s\n",supergrid->SC,supergrid->Status,supergrid->jobId);
 
        }
 
