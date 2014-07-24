@@ -1,0 +1,102 @@
+/*********************************************************************************************
+** File Name : Login.java
+** Author    : Mahesh Sreedharan
+** Date      : Jul-27 2009
+** Version   : 1.0
+
+** Desc      : DB connection program for basic login.
+** 
+**********************************************************************************************/
+
+
+package com.application.web;
+
+import java.io.*;
+import java.sql.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+import com.application.model.*;
+
+public class Login extends HttpServlet {
+
+	public void doPost(HttpServletRequest request, HttpServletResponse response)
+          throws ServletException, IOException {
+
+
+		String paramUser = request.getParameter("username");
+		String paramPwd = request.getParameter("passwd");
+
+		DBLoad dbLoad = (DBLoad)getServletContext().getAttribute("DB"); //Get the DB object from the ServletContext
+
+		Statement stmt = dbLoad.getConnStmt();
+
+		if(paramUser!=null && !paramUser.equals("")) {  // To check if the user enters a username that is not Blank/Null
+
+			if(paramPwd!=null && !paramPwd.equals("")) {  // To check if the user enters a password that is not Blank/Null
+
+				try {		
+
+					String query = "Select * from Users where userid='" +paramUser + "' and password= '"+paramPwd +"'";
+						
+					ResultSet rs = stmt.executeQuery(query);
+
+					if(rs.first()) {  // To check if the user enters a valid username and password
+
+						request.setAttribute("UserID",paramUser);
+						RequestDispatcher rdConsole = request.getRequestDispatcher("adminConsole.jsp");
+						rdConsole.forward(request,response);
+
+					}
+
+
+					else {
+					
+						errorForward(request,response);
+					}
+
+				} // End of try block
+
+				
+				catch (Exception e) {
+
+					System.err.println("Error fetching records from the DB");
+				}
+
+
+
+			}  //End of Inner 'If' block
+
+
+			else {
+
+				errorForward(request,response);
+			}
+
+		}  //End of Outer 'If' block
+
+		
+		else {
+
+			errorForward(request,response);
+		}			
+
+				
+	}  // End of doPost() Method.
+
+
+
+	public void errorForward(HttpServletRequest request, HttpServletResponse response)
+          throws ServletException, IOException {
+
+		String Message = "Invalid Login, Please try again with correct username and password....";
+		String Email = getServletConfig().getInitParameter("adminEmail");
+		
+		request.setAttribute("email",Email);
+		request.setAttribute("Msg",Message);
+		
+		RequestDispatcher rdConsole = request.getRequestDispatcher("Login.jsp");
+		rdConsole.forward(request,response);
+
+	}
+
+}  // End of Login Servlet.
