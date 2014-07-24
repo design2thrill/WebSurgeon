@@ -1,0 +1,543 @@
+/**********************************************************************************
+
+------------------File name : image.c--------------------------
+
+------------------Project   : BMP_Rotate_8---------------------
+
+------------------Author    : Mahesh Sreedharan----------------
+
+------------------Date      : 04-10-2007-----------------------
+
+ This image processing program is basically a modification of V1.7. Two read and 
+ write functions for FILEHEADER and INFOHEADER are added here. The proc
+ program is complete with this project.
+
+---To use as a template for future programs---
+
+***********************************************************************************/
+
+#include"image.h"
+
+void main()
+
+{
+
+		FILE *fp, *fp1; 
+   
+		short Choice = 0; 
+
+		int Status;
+	
+		char String[50],FileName[100];
+
+	
+		printf("\n\t\t*****Rotate an Image*****\n");
+	
+		printf("\n\t\tEnter the file name\t: ..........\b\b\b\b\b\b\b\b\b\b");
+	
+		scanf("%s",String);
+
+		printf("\n\t\tEnter 1 for Anti-Clockwise rotation or 2 for Clockwise or \n\n\t\tany other number to exit\t: ..\b\b");
+	
+		scanf("%d",&Choice);
+
+		
+		if(Choice<=0 || Choice >2)
+			
+			exit(0);
+	
+	
+
+		strcpy(FileName,"C:\\Documents and Settings\\Mahesh Sreedharan\\Desktop\\Hamaara_Project\\");
+
+	 
+	
+		fp = fopen(strcat(FileName,String),"rb");
+
+		
+	
+
+		
+		if(!fp) {
+		
+		
+			/* Give error message if source BMP could not be opened */   
+	
+			printf("\n\t\tSource file thurakkan prashnam aayi\n"); 
+
+			exit(0);
+
+		}
+
+
+		else {
+
+		
+			fp1 = fopen("C:\\Documents and Settings\\Mahesh Sreedharan\\Desktop\\Hamaara_Project\\just6.bmp","wb");
+
+			if(!fp1) {
+
+				printf("\n\t\tTarget file could not be opened\n");
+
+				exit(0);
+
+			}
+
+
+			Status = Image_Rotate(fp,fp1,Choice);
+
+			if(!Status) 
+
+				printf("\n\t\tMemory allocation error!\n");
+
+			else
+			
+				printf("\n\t\tImage Successfully Rotated\n");
+
+	
+		} /* End of 'else' over 'fp' */
+
+
+
+		fclose(fp);
+		fclose(fp1);
+
+
+} /* End of Main */
+
+
+
+
+	
+/************************************************************************* 
+
+The following two functions Read_Short and Read_Int are used since HEADER 
+structure is not a multiple of 4 bytes....so the compiler pads it by 2 
+bytes and the size becomes 16 bytes so the fread on HEADER structure will 
+not work correctly....
+So here we use character variables to read the first 14 bytes of the BMP 
+file using 'fgetc' function and the bytes are fused according to whether 
+its short (2 bytes) or normal int (4 bytes)....make sure the characters are 
+fused in the reverse order 
+
+***************************************************************************/
+
+
+
+unsigned short Read_Short(FILE *fp) 
+
+{
+
+		unsigned char a,b;
+		unsigned short c;
+
+		a = fgetc(fp);
+		b = fgetc(fp);
+	
+		c = b;
+		c= c<<8;
+		c = c | a;
+	
+	
+		return c;
+
+}
+
+
+unsigned int Read_Int(FILE *fp)
+
+{
+
+		unsigned char a,b,c,d;
+		unsigned int e;
+
+		a = fgetc(fp);
+		b = fgetc(fp);
+		c = fgetc(fp);
+		d = fgetc(fp);
+	
+		e = d;
+		e = e<<8;
+		e = e | c;
+		e = e<<8;
+		e = e | b;
+		e = e<<8;
+		e = e | a;
+
+
+		return e;
+
+}
+
+
+
+int Image_Rotate(FILE *fp, FILE *fp1, int Choice)
+
+{
+
+
+		int extra = 0,n=0,k=0,m=0,j=0;
+
+		
+		
+	
+		FILEHEADER FileHeader;
+
+		INFOHEADER InfoHeader, InfoHeader1;
+
+		IMAGEDATA **ImageData,**TempImageData,**ImageData1;
+
+		
+
+		FileHeader_Read(&FileHeader,fp);
+			
+		FileHeader_Write(&FileHeader,fp1);
+
+		InfoHeader_Read(&InfoHeader,fp);
+		
+				
+		InfoHeader1.HeaderSize      =  InfoHeader.HeaderSize;
+		InfoHeader1.ImageWidth      =  InfoHeader.ImageHeight;
+		InfoHeader1.ImageHeight     =  InfoHeader.ImageWidth;
+		InfoHeader1.ColorPlanes     =  InfoHeader.ColorPlanes;
+		InfoHeader1.BitsPerPixel    =  InfoHeader.BitsPerPixel;
+		InfoHeader1.CompressionType =  InfoHeader.CompressionType;
+		InfoHeader1.ImageSize       =  InfoHeader.ImageSize;
+		InfoHeader1.xResolution     =  InfoHeader.xResolution;
+		InfoHeader1.yResolution     =  InfoHeader.yResolution;
+		InfoHeader1.nColors         =  InfoHeader.nColors;
+		InfoHeader1.ImpColors       =  InfoHeader.ImpColors;
+
+
+		InfoHeader_Write(&InfoHeader1,fp1);
+
+		
+						
+		
+		if((ImageData = (IMAGEDATA **)malloc(InfoHeader.ImageHeight*sizeof(IMAGEDATA *)))==NULL)
+
+			return 0;
+
+
+		if((TempImageData = (IMAGEDATA **)malloc(InfoHeader1.ImageHeight * sizeof(IMAGEDATA *)))==NULL)
+
+			return 0;
+
+
+		if((ImageData1 = (IMAGEDATA **)malloc(InfoHeader1.ImageHeight * sizeof(IMAGEDATA *)))==NULL)
+
+			return 0;
+
+
+		
+		j = 0; 
+
+		
+		
+		while(j<InfoHeader.ImageHeight) {
+
+			if((ImageData[j] = (IMAGEDATA *)malloc(InfoHeader.ImageWidth * sizeof(IMAGEDATA)))==NULL) {
+
+				return 0;
+			}
+
+			j++;
+
+		}
+
+
+		j = 0;
+
+		
+		
+		while(j<InfoHeader1.ImageHeight) {
+
+			if((TempImageData[j] = (IMAGEDATA *)malloc(InfoHeader1.ImageWidth * sizeof(IMAGEDATA)))==NULL) {
+
+				return 0;
+
+			}
+
+
+			if((ImageData1[j] = (IMAGEDATA *)malloc(InfoHeader1.ImageWidth * sizeof(IMAGEDATA)))==NULL) {
+
+				return 0;
+
+			}
+
+			j++;
+
+		}
+
+
+		
+
+		ImageData_Read(ImageData,InfoHeader.ImageHeight, InfoHeader.ImageWidth, fp);
+		
+	
+
+				
+		for(j=0;j<InfoHeader1.ImageWidth;j++) {
+
+			for(n=0;n<InfoHeader1.ImageHeight;n++) {
+
+				TempImageData[n][j].Blue = ImageData[j][n].Blue;
+
+				TempImageData[n][j].Green = ImageData[j][n].Green;
+
+				TempImageData[n][j].Red = ImageData[j][n].Red;
+
+			}
+		}
+
+
+	
+
+		for(j=0;j<InfoHeader.ImageHeight;j++)
+
+			free(ImageData[j]);
+
+
+		free(ImageData);
+
+
+
+
+		if(Choice == 1) { /* Anti-clockwise */
+
+			for(j=0;j<InfoHeader1.ImageHeight;j++) {
+
+				for(n=0,m=InfoHeader1.ImageWidth-1;n<InfoHeader1.ImageWidth;n++,m--) {
+
+					ImageData1[j][n].Blue = TempImageData[j][m].Blue;
+
+					ImageData1[j][n].Green = TempImageData[j][m].Green;
+
+					ImageData1[j][n].Red = TempImageData[j][m].Red;
+
+			  }
+
+			}
+		
+		}
+
+		
+
+
+		if(Choice == 2) { /* Clockwise */
+
+			for(j=0,k=InfoHeader1.ImageHeight-1;j<InfoHeader1.ImageHeight;j++,k--) {
+
+				for(n=0,m=0;n<InfoHeader1.ImageWidth;n++,m++) {
+
+					ImageData1[j][n].Blue = TempImageData[k][m].Blue;
+
+					ImageData1[j][n].Green = TempImageData[k][m].Green;
+
+					ImageData1[j][n].Red = TempImageData[k][m].Red;
+
+				}
+
+			}
+
+		}
+
+
+		
+		
+		ImageData_Write(ImageData1, InfoHeader1.ImageHeight,InfoHeader1.ImageWidth,fp1);
+
+
+			
+		for(j=0;j<InfoHeader.ImageWidth;j++) {
+
+			free(ImageData1[j]);
+
+			free(TempImageData[j]);
+
+		}
+
+
+
+    	free(ImageData1);
+
+		free(TempImageData);
+
+
+		return 1;
+
+
+}
+
+
+
+
+void FileHeader_Read(FILEHEADER *FileHeader, FILE *fp)
+
+{
+
+	    FileHeader->FileType = Read_Short(fp);
+			
+		FileHeader->FileSize = Read_Int(fp);
+		
+		FileHeader->Reserved1 = Read_Short(fp);
+	
+		FileHeader->Reserved2 = Read_Short(fp);
+	
+		FileHeader->ImageOffset = Read_Int(fp);
+
+		
+}
+
+
+
+void FileHeader_Write(FILEHEADER *FileHeader, FILE *fp)
+
+{
+
+	    TEMP Temp;
+
+		TEMP1 Temp1;
+
+
+		Temp1.a = FileHeader->FileType;
+
+		fwrite(&Temp1,sizeof(TEMP1),1,fp);
+
+		Temp.a = FileHeader->FileSize;
+
+		fwrite(&Temp,sizeof(TEMP),1,fp);
+
+		Temp1.a = FileHeader->Reserved1;
+
+		fwrite(&Temp1,sizeof(TEMP1),1,fp);
+
+		Temp1.a = FileHeader->Reserved2;
+
+		fwrite(&Temp1,sizeof(TEMP1),1,fp);
+
+		Temp.a = FileHeader->ImageOffset;
+
+		fwrite(&Temp,sizeof(TEMP),1,fp);
+
+}
+
+
+
+
+
+void InfoHeader_Read(INFOHEADER *InfoHeader, FILE *fp)
+
+{
+
+		fread(InfoHeader,sizeof(INFOHEADER),1,fp); /* Read Infoheader from 'fp' */
+
+}
+
+
+
+
+
+void InfoHeader_Write(INFOHEADER *InfoHeader, FILE *fp)
+
+{
+
+		fwrite(InfoHeader,sizeof(INFOHEADER),1,fp); /* Write Infoheader to 'fp1' */
+
+}
+
+
+
+
+
+void ImageData_Read(IMAGEDATA **ImageData, int Height, int Width, FILE *fp)
+
+{
+    
+		int n=0, j=0, k=0, extra1=0;
+
+		unsigned char buffer;
+
+
+		extra1 = (3*Width) + (Width%4);
+
+
+
+		while(j<Height) {       /* 'while' for looping through the image height */
+
+			n=0;
+	
+			while(n<Width) {
+
+				fread(&ImageData[j][n],3,1,fp);
+				
+				n++;
+			}
+
+		
+			k=3*n;
+
+		
+			while(k<extra1) {
+
+				buffer = fgetc(fp);
+
+				k++;
+			}
+			
+			j++;
+	 
+		} /* End of 'while' over 'j' */
+
+
+}
+
+
+
+
+void ImageData_Write(IMAGEDATA **ImageData, int Height, int Width, FILE *fp)
+
+{
+
+	int n,j=0,k,extra;
+
+
+	/* 
+		   The 'extra' variable is width of the image plus the number of zeroes 
+		   added to each scan line (or a row) so that the number of bytes in a 
+		   scan line is a multiple of 4-bytes
+	*/
+	
+	
+	extra = (3*Width) + (Width%4); 
+
+
+	while(j<Height) {
+
+			n = 0;
+
+			while(n<Width) {
+
+				fwrite(&ImageData[j][n],3,1,fp);
+
+				n++;
+
+			}
+
+		
+			k = 3*n;
+
+			
+			while(k<extra) {
+
+				fputc('0',fp);
+
+				k++;
+
+			}
+
+			j++;
+
+		}
+
+}
