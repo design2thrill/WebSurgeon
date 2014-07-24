@@ -1,0 +1,112 @@
+/****************************************************
+** Author: Mahesh Sreedharan
+** Date  : 12/24/2005
+** Desc  : Draws a spectrogram based on fast
+           fourier transform. 
+           MS DOS based program
+*****************************************************/
+
+#include<stdio.h>
+#include<conio.h>
+#include<graphics.h>
+#include<math.h>
+#include<complex.h>
+#define pi 3.141592653
+
+
+void main()
+{
+int gdriver = VGA, gmode=VGAHI; //errorcode;
+   //int xmax, ymax;
+
+   /* initialize graphics and local variables */
+initgraph(&gdriver, &gmode, "");
+struct palettetype pal;
+int N,s=300,a[20],b[10],k,l,d=0,n=4,m=0,t=0,p=0,o;
+double e,f,result[5];
+complex x,y,sum1=0,sum2=0,second=0,r=0;
+
+float h=30+((2*3.14159653)/12),i,j=0;
+
+   setcolor(RED);
+   //xmax = getmaxx();
+   //ymax = getmaxy();
+    textbackground(BLACK);
+   setlinestyle(DOTTED_LINE,1,1);
+   //line(140,300,70,370);
+   line(140,100,140,300);
+   line(140,300,540,300);
+   setcolor(BLUE);
+   
+   for(i=140+h,j=70+h;i<=540;i=i+h,j=j+h)
+   line(i,300,j,370);
+   
+   for(i=120,j=320,k=520,l=320;i>=70;i=i-20,j=j+20,k=k-20,l=l+20)
+   line(i,j,k,l);
+   
+   for(i=140+h;i<=540;i=i+h)
+   line(i,300,i,100);
+   
+   for(j=280;j>=100;j=j-20)
+   line(140,j,540,j);
+
+printf("Point:\n");
+scanf("%d",&N);
+printf("Sequence\n");
+for(i=0;i<=N-1;i++)
+scanf("%d",&a[i]) ;
+
+    for(p=0;p<=N-1;s=s-20){
+for(t=0;t<=3;t++){
+b[t]=a[p];
+p++;
+}
+for(k=0;k<=n-1;k++){
+
+  for(m=0;m<=(n/2)-1;m++){
+
+     e=-(2*pi*k*m)/(n/2);
+     f=-(2*pi*k)/n;
+
+     x=complex(d,e);
+     y=complex(d,f);
+
+    sum1=sum1+(b[(2*m)+1]*exp(x));
+
+
+	  sum2=sum2+(b[2*m]*exp(x));
+   }
+	    second=sum1*exp(y);
+	       r=second+sum2;
+	       result[k]= sqrt(norm(r));
+	       sum1=0,sum2=0,second=0;
+}
+    setlinestyle(SOLID_LINE,1,3);
+    setcolor(GREEN);
+    for(i=140,k=0;k<=n-1;i=i+h,k++) {
+    printf("%f\n",result[k]);
+
+    //line(i,s,i-(20*(result[k]/2)),s+(20*(result[k]/2)));
+     // setfillstyle(SOLID_FILL,GREEN);
+    if(result[k]>0.005) {
+
+   /* grab a copy of the palette */
+   getpalette(&pal);
+
+   /* create gray scale */
+   for (o=0; o<pal.size; o++)
+   setrgbpalette(pal.colors[o],o*0,o*5,o*0);
+
+      setcolor(result[k]);
+
+   // bar(i,s-20,i+h,s);
+    //line(i,s,i-(20*(result[k]/2)),s+(20*(result[k]/2)));
+      line(i,s,i,s);
+    }
+
+
+ }}
+     getch();
+     closegraph();
+
+     }
