@@ -1,0 +1,44 @@
+/***************************************************************
+** Author: Mahesh Sreedharan
+** Date  : 2/14/2013
+** Desc  : This procedure inserts images into DB as filestreams.
+           SQL Server needs tweaking per MS instruction.
+****************************************************************/
+
+CREATE PROCEDURE [dbo].[insert_image] @Def_Name varchar(200), 
+										@Def_Desc varchar(200), 
+										@Def_Loc varchar(1000), 
+										@Def_Sev varchar(200), 
+										@Acc_Rej_Cri varchar(200), 
+										@Imagefile varchar(200),
+										@ret int output
+AS
+
+
+
+DECLARE @sql NVARCHAR(MAX) 
+
+
+set @sql = 'DECLARE @img AS VARBINARY(MAX) select @img = CAST(bulkcolumn AS VARBINARY(MAX))FROM OPENROWSET(BULK ''' +  @Imagefile + ''', SINGLE_BLOB ) AS x
+
+
+INSERT INTO Defects (Def_Name, 
+					Def_Desc, 
+					Def_Loc, 
+					Def_Sev , 
+					Acc_Rej_Cri , 
+					Imagefile 
+					)
+		VALUES	(''' +  @Def_Name + ''' , 
+				''' +  @Def_Desc + ''', 
+				''' +  @Def_Loc + ''', 
+				''' +  @Def_Sev + ''', 
+				''' +  @Acc_Rej_Cri + ''', 
+				@img 
+				 ) 		'
+		
+		exec (@sql)
+				 
+Set @ret = 0	
+
+GO
