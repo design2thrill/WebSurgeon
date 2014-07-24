@@ -1,0 +1,102 @@
+/*Below are some data tables: 
+
+Products table
+ProductID	Name	UnitPrice
+1	Chart	999
+2	Gauge	599
+3	Map	599
+
+SalesPersons table
+PersonID	Name	City
+101	Andy	Toronto
+102	Bob	Montreal
+103	Mathew	Vancouver
+
+
+Customers table 
+CustomerID	Company	City
+10089	IBM	Toronto
+24535	Johnsons	Toronto
+33555	Goodies	Montreal
+	
+Orders table
+OrderID	CustomerID	PersonID	ProductID	Quantity	Discount
+1	75353	103	2	5	
+2	24535	102	1	20	5%
+3	10089	101	3	3	
+4	10089	101	1	55	20%
+5	33555	101	1	2	
+
+
+QI-1:  Identify the relationships between each table if you think it is applicable.   You can modify the table if you think it’s necessary.
+Ans: Orders table is the Fact table, and Products, SalesPersons and Customer tables are Dimension tables connected (foreign constraints) to the Orders table (in a star schema). Depending on data volume, I might add another table called something like ‘Geo’ to hold the city information and the put the GeoID in the Fact as well (to get a snowflake schema).
+QI-2: Based on the relationships defined in QI-1, write a query that shows the total sales amount by each sales person for each product.
+
+*/
+
+SELECT A.Name AS SalesPerson,
+C.Name AS ProductName,
+B.Total*C.UnitPrice AS TotalAmount  
+FROM (
+
+	/*Select records from SalesPersons table */
+
+	(SELECT Name, 
+PersonId 
+FROM SalesPersons SP) A  
+
+	INNER JOIN
+	
+	 /*Select sum of total sales quantity made by each sales person  for each product */
+
+	(SELECT  PersonID , 
+ProductID , 
+SUM(Quantity)  AS Total
+	FROM Orders 
+	GROUP BY PersonID , ProductID 
+	)B
+
+	ON 
+
+	B.PersonId = A.PersonId
+
+	INNER JOIN
+	
+	/*Select records from Products table */
+
+	(SELECT Name, 
+ProductID, 
+UnitPrice 
+FROM Products) C
+
+	ON
+
+	C.ProductID = B.ProductID
+
+) 
+
+ORDER BY A.Name, C.Name
+
+QI-3: Based on the relationships defined in QI-1, write a query that shows all the products ordered by IBM, including number of units and total amount.
+SELECT A.Name AS Product, 
+B.Total AS NoOfUnits,
+ B.Total*A.UnitPrice AS TotalAmount  
+FROM (
+	/*Select records from Products table */
+	(SELECT Name, 
+ProductID, 
+UnitPrice 
+FROM Products) A
+	INNER JOIN 
+	/*Select sum of total sales quantity for IBM for each product */
+	(SELECT ProductID, 
+SUM(Quantity) AS Total 
+FROM Orders 
+	WHERE CustomerID = (SELECT CustomerID 
+FROM Customers 
+WHERE Company ='IBM')
+	GROUP BY ProductID
+	)B
+	ON B.ProductID = A.ProductID
+)
+ORDER BY A.Name
