@@ -1,0 +1,50 @@
+/************************************************************
+** Author: Mahesh Sreedharan
+** Date  : 2/22/2013
+** Desc  : Checks input parameter value to carry out updates
+           in the underlying quiz table.
+*************************************************************/
+
+CREATE PROCEDURE UPDATE_QUIZ_DETAILS @Question varchar(1000), @question_id int, @Answer varchar(1000), 
+@option1 varchar(1000), @option2 varchar(1000), @option3 varchar(1000), 
+@option4 varchar(1000), @param int, @ret int output
+AS
+
+DECLARE @quiz_id int;
+DECLARE @quest_no int;
+DECLARE @new_quest_id int;
+
+Select @quiz_id = (select quizid from Quiz_question where question_id = @question_id);
+Select @quest_no = (select max(question_no) from Quiz_question where quizid = @quiz_id );
+
+set @ret = -1
+		
+IF @param = 1
+BEGIN
+		update Quiz_Question set Question=@Question, Answer=@Answer where question_id = @question_id
+		update Quiz_options set option1 = @option1, option2 = @option2, option3 = @option3, option4 = @option4 where question_id = @question_id
+		
+		set @ret = 1
+END
+	
+IF @param = 2
+BEGIN	
+	insert into Quiz_Question (QuizId, Question, Answer, Points, Question_no) values(@quiz_id, @Question, @Answer, 1, @quest_no)
+
+	Select @new_quest_id = (select max(question_id) from quiz_question where quizid = @quiz_id)
+
+	insert into Quiz_options (QuizId, question_id, option1, option2, option3, option4) values (@quiz_id, @new_quest_id, @option1, @option2, @option3, @option4)
+
+	set @ret = 1
+END
+
+IF @param = 3
+BEGIN
+	Delete from quiz_points where  question_id = @question_id
+	Delete from quiz_options where question_id = @question_id
+	Delete from quiz_question where question_id= @question_id
+	
+	set @ret = 1
+END
+
+GO
