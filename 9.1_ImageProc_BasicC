@@ -1,12 +1,12 @@
 /**********************************************************************************
 
-------------------File name : image.c--------------------------
+------------------File name : image.c----------------------------------------------
 
-------------------Project   : BMP_Rotate_8---------------------
+------------------Project   : Image processing for internal corporate code base----
 
-------------------Author    : Mahesh Sreedharan----------------
+------------------Author    : Mahesh Sreedharan------------------------------------
 
-------------------Date      : 04-10-2007-----------------------
+------------------Date      : 04-10-2007-------------------------------------------
 
  This image processing program is basically a modification of V1.7. Two read and 
  write functions for FILEHEADER and INFOHEADER are added here. The proc
